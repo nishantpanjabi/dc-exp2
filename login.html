@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hotel Booking - Login</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 400px; margin: 50px auto; }
+    input, button { width: 100%; padding: 10px; margin: 10px 0; font-size: 16px; }
+    button { cursor: pointer; background: #00457c; color: white; border: none; border-radius: 4px; }
+    button:hover { background: #0166d6; }
+    .error { color: red; }
+    a { cursor: pointer; color: #00457c; text-decoration: none; font-weight: bold; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<h2>Login</h2>
+
+<input type="text" id="username" placeholder="Username" autocomplete="username" />
+<input type="password" id="password" placeholder="Password" autocomplete="current-password" />
+<button id="loginBtn">Login</button>
+<div class="error" id="error"></div>
+
+<p>Don't have an account? <a id="goSignup">Sign Up</a></p>
+
+<script>
+  const backendURL = 'http://192.168.132.114:3000';  // replace with backend IP
+
+  const loginBtn = document.getElementById('loginBtn');
+  const errorDiv = document.getElementById('error');
+  const goSignup = document.getElementById('goSignup');
+
+  loginBtn.addEventListener('click', async () => {
+    errorDiv.textContent = '';
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    if (!username || !password) {
+      errorDiv.textContent = 'Please enter username and password';
+      return;
+    }
+    try {
+      const res = await fetch(`${backendURL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        errorDiv.textContent = data.error || 'Login failed';
+        return;
+      }
+      // Save JWT token and username in localStorage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('username', username);
+      // Redirect to hotels page
+      window.location.href = 'hotels.html';
+    } catch (err) {
+      errorDiv.textContent = 'Network error: ' + err.message;
+    }
+  });
+
+  goSignup.addEventListener('click', () => {
+    window.location.href = 'signup.html';
+  });
+</script>
+
+</body>
+</html>

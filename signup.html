@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hotel Booking - Sign Up</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 400px; margin: 50px auto; }
+    input, button { width: 100%; padding: 10px; margin: 10px 0; font-size: 16px; }
+    button { cursor: pointer; background: #00457c; color: white; border: none; border-radius: 4px; }
+    button:hover { background: #0166d6; }
+    .error { color: red; }
+    .success { color: green; }
+    a { cursor: pointer; color: #00457c; text-decoration: none; font-weight: bold; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<h2>Sign Up</h2>
+
+<input type="text" id="username" placeholder="Choose a username" autocomplete="username" />
+<input type="password" id="password" placeholder="Choose a password" autocomplete="new-password" />
+<button id="signupBtn">Sign Up</button>
+<div class="error" id="error"></div>
+<div class="success" id="success"></div>
+
+<p>Already have an account? <a id="goLogin">Login here</a></p>
+
+<script>
+  const backendURL = 'http://MACHINE_B_IP:3000';  // replace with your backend IP
+
+  const signupBtn = document.getElementById('signupBtn');
+  const errorDiv = document.getElementById('error');
+  const successDiv = document.getElementById('success');
+  const goLogin = document.getElementById('goLogin');
+
+  signupBtn.addEventListener('click', async () => {
+    errorDiv.textContent = '';
+    successDiv.textContent = '';
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    if (!username || !password) {
+      errorDiv.textContent = 'Please enter username and password';
+      return;
+    }
+    try {
+      const res = await fetch(`${backendURL}/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        errorDiv.textContent = data.error || 'Sign up failed';
+        return;
+      }
+      successDiv.textContent = 'Sign up successful! Redirecting to login...';
+      setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+    } catch (err) {
+      errorDiv.textContent = 'Network error: ' + err.message;
+    }
+  });
+
+  goLogin.addEventListener('click', () => {
+    window.location.href = 'login.html';
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hotel Booking - Hotels</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; }
+    h2 { color: #00457c; }
+    button {
+      background: #00457c;
+      color: white;
+      border: none;
+      cursor: pointer;
+      padding: 8px 16px;
+      border-radius: 4px;
+      float: right;
+      margin-top: -40px;
+    }
+    ul { list-style-type: none; padding-left: 0; }
+    li {
+      background: #eef7ff;
+      margin: 12px 0;
+      padding: 15px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 1px 1px 7px #ccc;
+      transition: box-shadow 0.3s ease;
+    }
+    li:hover {
+      box-shadow: 1px 1px 12px #4a90e2;
+      background: #dceeff;
+    }
+    .not-available {
+      cursor: default;
+      color: #999;
+      background: #f5f5f5;
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Available Hotels</h2>
+<button id="logoutBtn">Logout</button>
+<p>Welcome, <span id="usernameDisplay"></span></p>
+<div id="roomsList">Loading rooms...</div>
+
+<script>
+  const backendURL = 'http://192.168.132.114:3000';  // replace with backend IP
+
+  const roomsListDiv = document.getElementById('roomsList');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const usernameDisplay = document.getElementById('usernameDisplay');
+
+  function isLoggedIn() {
+    return !!localStorage.getItem('token');
+  }
+
+  function clearRooms() {
+    roomsListDiv.innerHTML = '';
+  }
+
+  function redirectToLogin() {
+    window.location.href = 'login.html';
+  }
+
+  async function loadRooms() {
+    roomsListDiv.textContent = 'Loading rooms...';
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${backendURL}/rooms`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (res.status === 401) {
+        alert('Session expired or unauthorized, please login again.');
+        logout();
+        return;
+      }
+      const data = await res.json();
+      if (!res.ok) {
+        roomsListDiv.textContent = data.error || 'Failed to load rooms';
+        return;
+      }
+      renderRooms(data);
+    } catch (e) {
+      roomsListDiv.textContent = 'Failed to load rooms: ' + e.message;
+    }
+  }
+
+  function renderRooms(rooms) {
+    clearRooms();
+    if (rooms.length === 0) {
+      roomsListDiv.textContent = 'No rooms available.';
+      return;
+    }
+    const ul = document.createElement('ul');
+    rooms.forEach(room => {
+      const li = document.createElement('li');
+      li.textContent = `Room ${room.room_number} - ${room.room_type} - $${room.price_per_night}/night - Available: ${room.is_available ? 'Yes' : 'No'}`;
+      if (room.is_available) {
+        li.addEventListener('click', () => {
+          // Save room info to pass to booking page
+          localStorage.setItem('selectedRoom', JSON.stringify(room));
+          window.location.href = 'booking.html';
+        });
+      } else {
+        li.classList.add('not-available');
+      }
+      ul.appendChild(li);
+    });
+    roomsListDiv.appendChild(ul);
+  }
+
+  logoutBtn.addEventListener('click', () => {
+    logout();
+  });
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    localStorage.removeItem('selectedRoom');
+    redirectToLogin();
+  }
+
+  // On load
+  window.onload = () => {
+    if (!isLoggedIn()) {
+      redirectToLogin();
+      return;
+    }
+    usernameDisplay.textContent = localStorage.getItem('username') || '';
+    loadRooms();
+  };
+</script>
+
+</body>
+</html>
